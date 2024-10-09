@@ -18,12 +18,12 @@ defaults:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}
-  QT_VERSION:   6.4.0
-  ARTIFACT:     qt-widgets-build.zip
+  QT_VERSION:   5.15.2
+  ARTIFACT:     qtaction.zip
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-2019
 
     steps:
       - name: Checkout repo
@@ -31,39 +31,52 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up Python  # Use Python 3.10 to avoid compatibility issues
-        uses: actions/setup-python@v4
+      - name: Get all tags for correct version determination
+        working-directory:  ${{ github.workspace }}
+        run: git fetch --all --tags -f
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
         with:
-          python-version: '3.10'
+          version:      ${{ env.QT_VERSION }}
+          host:         windows
+          target:       desktop
+          arch:         win64_msvc2019_64
+          dir:          ${{ runner.temp }}
+          setup-python: false
 
-      - name: Install Python dependencies  # Install aqt and other dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install aqtinstall
+      - name: Download JOM
+        uses: suisei-cn/actions-download-file@v1
+        with:
+          url:    http://download.qt.io/official_releases/jom/jom.zip
+          target: ${{ runner.temp }}\
 
-      - name: Install Qt with aqt  # Install Qt using aqt and use correct variable substitution
-        run: |
-          python -m aqt install-qt windows desktop ${{ env.QT_VERSION }} mingw_64
+      - name: Unzip JOM
+        working-directory: ${{ runner.temp }}
+        run: 7z x jom.zip -ojom
 
       - name: Create build directory
         run: mkdir ${{ runner.temp }}\build
 
-      - name: Set up MinGW environment
-        run: |
-          SET PATH=C:\Qt\Tools\mingw1120_64\bin;%PATH%
-          SET PATH=C:\Qt\${{ env.QT_VERSION }}\mingw_64\bin;%PATH%
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - name: Build
         working-directory: ${{ runner.temp }}\build
         run: |
-          qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
-          mingw32-make -j2
+          qmake -r ${{ env.SOURCE_DIR }}/qtaction.pro
+          ${{ runner.temp }}/jom/jom -j2
           cd release
-          windeployqt6 qtaction.exe --pdb --release --compiler-runtime
-
+          windeployqt ${{ env.SOURCE_DIR }}/qtaction.exe --pdb --release --compiler-runtime
+          copy C:\Windows\System32\concrt140.dll .
+          copy C:\Windows\System32\vccorlib140.dll .
+          copy C:\Windows\System32\msvcp140.dll .
+          copy C:\Windows\System32\vcruntime140.dll .
       - name: Zip build
         working-directory: ${{ runner.temp }}
-        run: 7z a qt-widgets-build.zip ${{ runner.temp }}\build\* -r
+        run: 7z a ${{ env.ARTIFACT }} ${{ runner.temp }}\build\* -r
 
       - name: Save build artifact
         uses: actions/upload-artifact@v3
