@@ -9,8 +9,8 @@ on:
       - 'v*'
   pull_request:
     branches:
-    - 'master'
-    - 'continuous-integration'
+      - 'master'
+      - 'continuous-integration'
 
 defaults:
   run:
@@ -23,7 +23,7 @@ env:
 
 jobs:
   build:
-    runs-on:  windows-2019
+    runs-on: windows-2019
 
     steps:
       - name: Checkout repo
@@ -33,8 +33,8 @@ jobs:
 
       - name: Get all tags for correct version determination
         working-directory:  ${{ github.workspace }}
-        run: |
-          git fetch --all --tags -f
+        run: git fetch --all --tags -f
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
@@ -53,11 +53,10 @@ jobs:
 
       - name: Unzip JOM
         working-directory: ${{ runner.temp }}
-        run:  |
-              7z x jom.zip -ojom
-              
+        run: 7z x jom.zip -ojom
+
       - name: Create build directory
-        run:  mkdir ${{ runner.temp }}\build
+        run: mkdir ${{ runner.temp }}\build
 
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
@@ -66,24 +65,22 @@ jobs:
 
       - name: Build
         working-directory: ${{ runner.temp }}\build
-        run:  |
-            qmake -r ${{ env.SOURCE_DIR }}/qtaction.pro
-                    ${{ runner.temp }}/jom/jom -j2
-                    cd release
-                    windeployqt ${{ env.SOURCE_DIR }}/qtaction.exe --pdb --release --compiler-runtime
-                    copy C:/Windows/System32/concrt140.dll .
-                    copy C:/Windows/System32/vccorlib140.dll .
-                    copy C:/Windows/System32/msvcp140.dll .
-                    copy C:/Windows/System32/vcruntime140.dll .
-              
+        run: |
+          qmake -r ${{ env.SOURCE_DIR }}/qtaction.pro
+          ${{ runner.temp }}/jom/jom -j2
+          cd release
+          windeployqt ${{ env.SOURCE_DIR }}/qtaction.exe --pdb --release --compiler-runtime
+          copy C:/Windows/System32/concrt140.dll .
+          copy C:/Windows/System32/vccorlib140.dll .
+          copy C:/Windows/System32/msvcp140.dll .
+          copy C:/Windows/System32/vcruntime140.dll .
+
       - name: Zip build
         working-directory: ${{ runner.temp }}
-        run:  |
-              7z a qtaction-build.zip ${{ runner.temp }}\build\* -r
-              
+        run: 7z a ${{ env.ARTIFACT }} ${{ runner.temp }}\build\* -r
+
       - name: Save build artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT }}
           path: ${{ runner.temp }}\${{ env.ARTIFACT }}
-              
