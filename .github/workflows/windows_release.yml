@@ -41,7 +41,7 @@ jobs:
           version:      ${{ env.QT_VERSION }}
           host:         windows
           target:       desktop
-          arch:         win64_msvc2019_64
+          arch:         win64_msvc2022_64
           dir:          ${{ runner.temp }}
           setup-python: false
 
@@ -69,7 +69,7 @@ jobs:
          qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
           mingw32-make -j2
           cd release
-          windeployqt6 qtaction.exe --pdb --release --compiler-runtime
+          windeployqt qtaction.exe --pdb --release --compiler-runtime
           copy C:\Windows\System32\concrt140.dll .
           copy C:\Windows\System32\vccorlib140.dll .
           copy C:\Windows\System32\msvcp140.dll .
