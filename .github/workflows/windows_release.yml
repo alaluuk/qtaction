@@ -41,23 +41,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install aqtinstall
 
-      - name: Install Qt with aqt  # Install Qt using aqt and use correct variable substitution
+      - name: Install Qt with aqt using MSVC
         run: |
-          python -m aqt install-qt windows desktop ${{ env.QT_VERSION }} mingw_64
+          python -m aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2022_64
 
       - name: Create build directory
         run: mkdir ${{ runner.temp }}\build
 
-      - name: Set up MinGW environment
-        run: |
-          SET PATH=C:\Qt\Tools\mingw1120_64\bin;%PATH%
-          SET PATH=C:\Qt\${{ env.QT_VERSION }}\mingw_64\bin;%PATH%
+      - name: Set up MSVC environment
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - name: Build
         working-directory: ${{ runner.temp }}\build
         run: |
           qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
-          mingw32-make -j2
+          nmake -j2
           cd release
           windeployqt6 qtaction.exe --pdb --release --compiler-runtime
 
