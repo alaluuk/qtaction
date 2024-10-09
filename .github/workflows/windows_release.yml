@@ -66,10 +66,10 @@ jobs:
       - name: Build
         working-directory: ${{ runner.temp }}\build
         run: |
-          qmake -r ${{ env.SOURCE_DIR }}\planets-widgets.pro
+          qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
           ${{ runner.temp }}\jom\jom -j2
           cd release
-          windeployqt6 planets-widgets.exe --pdb --release --compiler-runtime
+          windeployqt6 qtaction.exe --pdb --release --compiler-runtime
           copy C:\Windows\System32\concrt140.dll .
           copy C:\Windows\System32\vccorlib140.dll .
           copy C:\Windows\System32\msvcp140.dll .
