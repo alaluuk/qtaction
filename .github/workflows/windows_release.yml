@@ -31,33 +31,33 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Get all tags for correct version determination
-        working-directory:  ${{ github.workspace }}
-        run: git fetch --all --tags -f
-
-      - name: Install Qt with MinGW
-        uses: jurplel/install-qt-action@v2
+      - name: Set up Python  # Use Python 3.10 to avoid compatibility issues
+        uses: actions/setup-python@v4
         with:
-          version:      ${{ env.QT_VERSION }}
-          host:         windows
-          target:       desktop
-          arch:         mingw_64  # Specify MinGW architecture
-          dir:          ${{ runner.temp }}
-          setup-python: true
+          python-version: '3.10'
+
+      - name: Install Python dependencies  # Install aqt and other dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aqtinstall
+
+      - name: Install Qt with aqt  # Install Qt using aqt manually
+        run: |
+          python -m aqt install-qt windows desktop ${QT_VERSION} mingw_64
 
       - name: Create build directory
         run: mkdir ${{ runner.temp }}\build
 
       - name: Set up MinGW environment
         run: |
-          SET PATH=C:\Qt\Tools\mingw1120_64\bin;%PATH%  # Ensure MinGW is in the PATH
-          SET PATH=C:\Qt\6.7.0\mingw_64\bin;%PATH%  # Ensure Qt tools are in the PATH
+          SET PATH=C:\Qt\Tools\mingw1120_64\bin;%PATH%
+          SET PATH=C:\Qt\6.7.0\mingw_64\bin;%PATH%
 
       - name: Build
         working-directory: ${{ runner.temp }}\build
         run: |
           qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
-          mingw32-make -j2  # Use mingw32-make for MinGW
+          mingw32-make -j2
           cd release
           windeployqt6 qtaction.exe --pdb --release --compiler-runtime
 
