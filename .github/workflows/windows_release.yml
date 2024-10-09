@@ -18,7 +18,7 @@ defaults:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}
-  QT_VERSION:   6.7.0
+  QT_VERSION:   6.4.0
   ARTIFACT:     qt-widgets-build.zip
 
 jobs:
@@ -41,23 +41,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install aqtinstall
 
-      - name: Install Qt with aqt using MSVC
+      - name: Install Qt with aqt  # Install Qt using aqt and use correct variable substitution
         run: |
-          python -m aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2022_64
+          python -m aqt install-qt windows desktop ${{ env.QT_VERSION }} mingw_64
 
       - name: Create build directory
         run: mkdir ${{ runner.temp }}\build
 
-      - name: Set up MSVC environment
-        uses: egor-tensin/vs-shell@v2
-        with:
-          arch: x64
+      - name: Set up MinGW environment
+        run: |
+          SET PATH=C:\Qt\Tools\mingw1120_64\bin;%PATH%
+          SET PATH=C:\Qt\${{ env.QT_VERSION }}\mingw_64\bin;%PATH%
 
       - name: Build
         working-directory: ${{ runner.temp }}\build
         run: |
           qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
-          nmake -j2
+          mingw32-make -j2
           cd release
           windeployqt6 qtaction.exe --pdb --release --compiler-runtime
 
