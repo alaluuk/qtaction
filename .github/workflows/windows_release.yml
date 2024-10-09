@@ -43,11 +43,7 @@ jobs:
           target:       desktop
           arch:         mingw_64  # Specify MinGW architecture
           dir:          ${{ runner.temp }}
-          setup-python: false
-      - name: Set up Python  # This step ensures Python is installed properly
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+          setup-python: true
 
       - name: Create build directory
         run: mkdir ${{ runner.temp }}\build
