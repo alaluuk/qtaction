@@ -14,11 +14,11 @@ on:
 
 defaults:
   run:
-    shell: cmd
+    shell: cmd  # We are using CMD shell, so we need to use CMD-style variable expansion
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}
-  QT_VERSION:   6.7.0
+  QT_VERSION:   6.7.0  # Qt version is set here
   ARTIFACT:     qt-widgets-build.zip
 
 jobs:
@@ -41,12 +41,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install aqtinstall
 
-      - name: Install Qt with aqt  # Install Qt using aqt manually
+      - name: Install Qt with aqt  # Install Qt using aqt and use correct CMD variable substitution
         run: |
-          python -m aqt install-qt windows desktop ${QT_VERSION} mingw_64
+          python -m aqt install-qt windows desktop %QT_VERSION% mingw_64
 
       - name: Create build directory
-        run: mkdir ${{ runner.temp }}\build
+        run: mkdir %RUNNER_TEMP%\build
 
       - name: Set up MinGW environment
         run: |
@@ -54,19 +54,19 @@ jobs:
           SET PATH=C:\Qt\6.7.0\mingw_64\bin;%PATH%
 
       - name: Build
-        working-directory: ${{ runner.temp }}\build
+        working-directory: %RUNNER_TEMP%\build
         run: |
-          qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
+          qmake -r %SOURCE_DIR%\qtaction.pro
           mingw32-make -j2
           cd release
           windeployqt6 qtaction.exe --pdb --release --compiler-runtime
 
       - name: Zip build
-        working-directory: ${{ runner.temp }}
-        run: 7z a qt-widgets-build.zip ${{ runner.temp }}\build\* -r
+        working-directory: %RUNNER_TEMP%
+        run: 7z a qt-widgets-build.zip %RUNNER_TEMP%\build\* -r
 
       - name: Save build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.ARTIFACT }}
-          path: ${{ runner.temp }}\${{ env.ARTIFACT }}
+          name: %ARTIFACT%
+          path: %RUNNER_TEMP%\%ARTIFACT%
