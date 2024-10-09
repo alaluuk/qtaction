@@ -58,4 +58,15 @@ jobs:
         run: |
           qmake -r ${{ env.SOURCE_DIR }}\qtaction.pro
           mingw32-make -j2
-         
+          cd release
+          windeployqt6 qtaction.exe --pdb --release --compiler-runtime
+
+      - name: Zip build
+        working-directory: ${{ runner.temp }}
+        run: 7z a qt-widgets-build.zip ${{ runner.temp }}\build\* -r
+
+      - name: Save build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: ${{ runner.temp }}\${{ env.ARTIFACT }}
